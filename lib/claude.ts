@@ -4,10 +4,10 @@ import { Message } from '@/types';
 const getClient = () =>
   new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-    baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+    baseURL: process.env.OPENAI_BASE_URL || 'https://ai.gs88.shop/v1',
   });
 
-const getModel = () => process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
+const getModel = () => process.env.OPENAI_MODEL || 'gpt-5.5';
 
 export async function streamChat(
   systemPrompt: string,
