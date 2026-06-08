@@ -34,6 +34,8 @@ export default function ChatInterface() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   // 初始化本地状态
   useEffect(() => {
     const savedMessages = loadMessages();
@@ -178,14 +180,31 @@ export default function ChatInterface() {
       const decoder = new TextDecoder();
       let fullText = '';
 
+      const appendChunkWithTyping = async (chunkText: string) => {
+        for (const char of chunkText) {
+          fullText += char;
+          setMessages((prev) =>
+            prev.map((item) => (item.id === assistantMessage.id ? { ...item, content: fullText } : item))
+          );
+
+          const delay = /[，。！？；：,.!?;:]/.test(char) ? 40 : 16;
+          await sleep(delay);
+        }
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        fullText += decoder.decode(value, { stream: true });
-        setMessages((prev) =>
-          prev.map((item) => (item.id === assistantMessage.id ? { ...item, content: fullText } : item))
-        );
+        const chunkText = decoder.decode(value, { stream: true });
+        if (chunkText) {
+          await appendChunkWithTyping(chunkText);
+        }
+      }
+
+      const restText = decoder.decode();
+      if (restText) {
+        await appendChunkWithTyping(restText);
       }
     } catch {
       showToast('😢 请求失败，请检查 API Key 是否配置正确');
